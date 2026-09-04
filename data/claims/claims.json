@@ -1,0 +1,42 @@
+[
+    {
+        "claim_id": "CLM-001",
+        "policy_id": "POL-2026",
+        "incident_date": "2026-05-10",
+        "claim_amount": 45000,
+        "incident_type": "accidental_damage",
+        "vehicle_reg": "KA-01-AB-1234"
+    },
+    {
+        "claim_id": "CLM-002",
+        "policy_id": "POL-2026",
+        "incident_date": "2026-06-15",
+        "claim_amount": 500000,
+        "incident_type": "theft",
+        "vehicle_reg": "KA-01-AB-1234"
+    },
+    {
+        "claim_id": "CLM-003",
+        "policy_id": "POL-2026",
+        "incident_date": "2026-07-20",
+        "claim_amount": 500000,
+        "incident_type": "theft",
+        "vehicle_reg": "KA-01-AB-1234"
+    },
+    {
+        "claim_id": "CLM-004",
+        "policy_id": "POL-2026",
+        "incident_date": "2026-08-05",
+        "claim_amount": 150000,
+        "incident_type": "accidental_damage",
+        "vehicle_reg": "KA-01-AB-1234"
+    },
+    {
+        "claim_id": "CLM-005",
+        "policy_id": "POL-2026",
+        "incident_date": "2026-09-01",
+        "claim_amount": 80000,
+        "incident_type": "accidental_damage",
+        "vehicle_reg": "KA-01-AB-1234"
+    }
+]

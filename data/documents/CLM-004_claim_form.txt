@@ -1,0 +1,5 @@
+Claim ID: CLM-004
+Vehicle: KA-01-AB-1234
+Type: Accidental Damage
+Amount: 150000 INR
+Date: 2026-08-05

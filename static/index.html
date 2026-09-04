@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS02 Insurance Claims Review Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Insurance Claims Evidence Review Assistant</h1>
+            <p>Automated analysis and deterministic checking for motor insurance claims.</p>
+        </header>
+
+        <main>
+            <section class="claim-selector-section">
+                <label for="claim-select">Select a Claim to Review:</label>
+                <select id="claim-select">
+                    <option value="" disabled selected>Loading claims...</option>
+                </select>
+                <button id="btn-review" disabled>Run Review</button>
+            </section>
+
+            <section class="results-section hidden" id="results-container">
+                <div class="result-header">
+                    <h2>Review Results</h2>
+                    <span id="recommendation-badge" class="badge"></span>
+                </div>
+                
+                <div class="justification-card">
+                    <h3>Justification</h3>
+                    <p id="justification-text"></p>
+                </div>
+                
+                <div class="issues-container">
+                    <div class="card flags-card hidden" id="flags-card">
+                        <h3>Deterministic Flags</h3>
+                        <ul id="flags-list"></ul>
+                    </div>
+                    
+                    <div class="card missing-docs-card hidden" id="missing-docs-card">
+                        <h3>Missing Documents</h3>
+                        <ul id="missing-docs-list"></ul>
+                    </div>
+                </div>
+
+                <div class="findings-section" id="findings-section">
+                    <h3>Evidence Findings & Citations</h3>
+                    <div id="findings-list" class="findings-list">
+                        <!-- Finding items injected here -->
+                    </div>
+                </div>
+            </section>
+            
+            <div id="loading-overlay" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing claim evidence against policy...</p>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>

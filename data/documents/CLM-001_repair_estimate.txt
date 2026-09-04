@@ -1,0 +1,5 @@
+Repair Estimate from AutoFix Garage.
+Replace front bumper: 20000 INR
+Replace left headlight: 15000 INR
+Labor: 10000 INR
+Total: 45000 INR
