@@ -21,6 +21,7 @@ class Claim(BaseModel):
     claim_id: str
     policy_id: str
     incident_date: str
+    claim_date: Optional[str] = None
     claim_amount: float
     incident_type: str
     vehicle_reg: str

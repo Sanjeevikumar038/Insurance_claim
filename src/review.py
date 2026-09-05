@@ -37,28 +37,31 @@ def load_documents(claim_id: str) -> List[Document]:
 def determine_recommendation(
     missing_docs: List[str], 
     flags: List[str], 
-    findings: List[FindingMetadata]
+    findings: List[FindingMetadata],
+    policy: Policy
 ) -> tuple[str, str]:
     """
     Applies the deterministic decision hierarchy.
     """
     
-    # 2. Material Contradiction -> ESCALATE
+    exclusion_keywords = ["exclusion"] + [exc.title.lower() for exc in policy.exclusions]
+    
+    # 2. Clearly Established Exclusion -> REJECT
+    # If the policy clause mapped is an exclusion and it's SUPPORTED by evidence, or CONTRADICTED but backed by authoritative FIR.
+    for finding in findings:
+        if finding.policy_clause and any(kw in finding.policy_clause.lower() for kw in exclusion_keywords):
+            if finding.status == "SUPPORTED":
+                return "REJECT", f"Claim blocked by exclusion: {finding.finding}"
+            elif finding.status == "CONTRADICTED" and finding.source_type and ("fir" in finding.source_type.lower() or "fir" in finding.source_id.lower() or "fir" in finding.source_location.lower()):
+                return "REJECT", f"Claim blocked by exclusion established by authoritative FIR evidence despite customer contradiction: {finding.finding}"
+
+    # 3. Material Contradiction -> ESCALATE
     if flags:
         return "ESCALATE", "Material contradiction detected by deterministic rules: " + "; ".join(flags)
         
     for finding in findings:
         if finding.status == "CONTRADICTED":
-            # Check if this contradiction maps to an exclusion
-            if finding.policy_clause and "Exclusion" in finding.finding: # Just a heuristic, but let's be safer
-                pass
             return "ESCALATE", f"Material contradiction detected by AI: {finding.finding}"
-            
-    # 3. Clearly Established Exclusion -> REJECT
-    # If the policy clause mapped is an exclusion and it's SUPPORTED by evidence
-    for finding in findings:
-        if finding.status == "SUPPORTED" and finding.policy_clause and ("exclusion" in finding.policy_clause.lower() or finding.policy_clause.startswith("E")):
-            return "REJECT", f"Claim blocked by exclusion: {finding.finding}"
             
     # 4. Missing Required Information/Documents -> REQUEST INFORMATION
     if missing_docs:
@@ -120,7 +123,7 @@ def review_claim(claim_id: str) -> ReviewResult:
             )
             
         # 4. Decision Hierarchy
-        recommendation, justification = determine_recommendation(missing_docs, det_flags, all_findings)
+        recommendation, justification = determine_recommendation(missing_docs, det_flags, all_findings, policy)
         
         return ReviewResult(
             missing_documents=missing_docs,

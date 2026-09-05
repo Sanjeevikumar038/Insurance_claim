@@ -2,12 +2,12 @@ import os
 import json
 from google import genai
 from google.genai import types
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from src.models import FindingMetadata
 
-# Pydantic schema for the LLM output
 class GeminiAnalysisResult(BaseModel):
+    analysis_summary: str = ""
     findings: List[FindingMetadata]
 
 def get_gemini_client():
@@ -34,6 +34,23 @@ def analyze_claim_evidence(incident_description: str, retrieved_clauses: str, cl
     4. If the evidence is insufficient to determine a fact, output status 'UNKNOWN'.
     5. Do not make the final approve/reject decision. Only output the findings.
     
+    OUTPUT FORMAT:
+    Your output must be a valid JSON object matching this exact structure:
+    {{
+      "analysis_summary": "string",
+      "findings": [
+        {{
+          "finding": "string",
+          "source_type": "string",
+          "source_id": "string",
+          "source_location": "string",
+          "evidence": "string",
+          "policy_clause": "string or null",
+          "status": "SUPPORTED | CONTRADICTED | UNKNOWN"
+        }}
+      ]
+    }}
+    
     POLICY CLAUSES:
     {retrieved_clauses}
     
@@ -50,18 +67,19 @@ def analyze_claim_evidence(incident_description: str, retrieved_clauses: str, cl
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=GeminiAnalysisResult,
                 temperature=0.0
             )
         )
         
         # Parse the structured JSON response
-        result_dict = json.loads(response.text)
+        try:
+            result_dict = json.loads(response.text)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse Gemini JSON: {e}\nRaw output: {response.text}")
+            
         return GeminiAnalysisResult(**result_dict)
         
     except Exception as e:
-        # In case of API failure, timeout, or malformed JSON, raise an exception
-        # which will be caught by the orchestrator and turned into an ERROR state.
         raise RuntimeError(f"Gemini API Error: {str(e)}")
 
 def generate_embeddings(texts: List[str]) -> List[List[float]]:
