@@ -4,6 +4,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+from src.config import load_config
+# Load environment variables (e.g., from .env file)
+load_config()
+
 from src.review import review_claim
 
 app = FastAPI(title="PS02 Insurance Claims Evidence Review Assistant")
