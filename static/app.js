@@ -3,25 +3,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reviewBtn = document.getElementById('btn-review');
     const resultsContainer = document.getElementById('results-container');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    
+    // Summary elements
+    const summaryCard = document.getElementById('claim-summary');
+    const sumId = document.getElementById('summary-id');
+    const sumType = document.getElementById('summary-type');
+    const sumAmount = document.getElementById('summary-amount');
+    const sumDocs = document.getElementById('summary-docs');
+    const sumPolicy = document.getElementById('summary-policy');
+
+    let claimsData = [];
 
     // Load claims
     try {
         const res = await fetch('/api/claims');
-        const claims = await res.json();
+        claimsData = await res.json();
         claimSelect.innerHTML = '<option value="" disabled selected>Select a claim...</option>';
-        claims.forEach(c => {
+        claimsData.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.claim_id;
             opt.textContent = `${c.claim_id} - ${c.incident_type.replace('_', ' ')} (${c.claim_amount} INR)`;
             claimSelect.appendChild(opt);
         });
+        
         claimSelect.addEventListener('change', () => {
             reviewBtn.disabled = !claimSelect.value;
+            resultsContainer.classList.add('hidden');
+            
+            const selected = claimsData.find(c => c.claim_id === claimSelect.value);
+            if (selected) {
+                summaryCard.classList.remove('hidden');
+                sumId.textContent = selected.claim_id;
+                sumType.textContent = selected.incident_type.replace('_', ' ').toUpperCase();
+                sumAmount.textContent = `₹${parseInt(selected.claim_amount).toLocaleString('en-IN')}`;
+                sumPolicy.textContent = selected.policy_id || 'UNKNOWN';
+                sumDocs.textContent = 'PENDING REVIEW';
+                sumDocs.className = 'metric-value doc-status';
+            }
         });
     } catch (err) {
         console.error("Failed to load claims", err);
         claimSelect.innerHTML = '<option value="" disabled selected>Error loading claims</option>';
     }
+
+    const loadingMessages = [
+        "Analyzing claim evidence...",
+        "Retrieving applicable policy clauses...",
+        "Running deterministic checks..."
+    ];
 
     // Run Review
     reviewBtn.addEventListener('click', async () => {
@@ -30,6 +60,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         resultsContainer.classList.add('hidden');
         loadingOverlay.classList.remove('hidden');
+        reviewBtn.disabled = true;
+
+        let msgIndex = 0;
+        loadingText.textContent = loadingMessages[0];
+        const msgInterval = setInterval(() => {
+            msgIndex = (msgIndex + 1) % loadingMessages.length;
+            loadingText.textContent = loadingMessages[msgIndex];
+        }, 1500);
 
         try {
             const res = await fetch('/api/review', {
@@ -38,9 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ claim_id: claimId })
             });
 
-            if (!res.ok) {
-                throw new Error("API responded with " + res.status);
-            }
+            if (!res.ok) throw new Error("API responded with " + res.status);
 
             const data = await res.json();
             renderResults(data);
@@ -54,74 +90,136 @@ document.addEventListener('DOMContentLoaded', async () => {
                 findings: []
             });
         } finally {
+            clearInterval(msgInterval);
             loadingOverlay.classList.add('hidden');
+            reviewBtn.disabled = false;
         }
     });
 
     function renderResults(data) {
         resultsContainer.classList.remove('hidden');
         
-        // Recommendation Badge
+        // 1. Outcome Card
+        const outcomeCard = document.getElementById('outcome-card');
         const badge = document.getElementById('recommendation-badge');
         let recClass = data.recommendation.replace(' ', '-');
-        badge.className = `badge ${recClass}`;
+        
+        // Reset classes
+        outcomeCard.className = 'outcome-card';
+        outcomeCard.classList.add(recClass);
         badge.textContent = data.recommendation;
-
-        // Justification
         document.getElementById('justification-text').textContent = data.justification;
 
-        // Flags
-        const flagsCard = document.getElementById('flags-card');
-        const flagsList = document.getElementById('flags-list');
-        flagsList.innerHTML = '';
-        if (data.flags && data.flags.length > 0) {
-            flagsCard.classList.remove('hidden');
-            data.flags.forEach(f => {
-                const li = document.createElement('li');
-                li.textContent = f;
-                flagsList.appendChild(li);
-            });
-        } else {
-            flagsCard.classList.add('hidden');
-        }
-
-        // Missing Docs
-        const missingDocsCard = document.getElementById('missing-docs-card');
+        // 2. Missing Documents Warning
+        const missingDocsSection = document.getElementById('missing-docs-section');
         const missingDocsList = document.getElementById('missing-docs-list');
         missingDocsList.innerHTML = '';
+        
         if (data.missing_documents && data.missing_documents.length > 0) {
-            missingDocsCard.classList.remove('hidden');
+            missingDocsSection.classList.remove('hidden');
             data.missing_documents.forEach(d => {
                 const li = document.createElement('li');
-                li.textContent = d;
+                li.textContent = d.toUpperCase();
                 missingDocsList.appendChild(li);
             });
+            sumDocs.textContent = `${data.missing_documents.length} DOCUMENT(S) MISSING`;
+            sumDocs.className = 'metric-value doc-status warning';
         } else {
-            missingDocsCard.classList.add('hidden');
+            missingDocsSection.classList.add('hidden');
+            sumDocs.textContent = 'ALL REQUIRED PRESENT';
+            sumDocs.className = 'metric-value doc-status ok';
         }
 
-        // Findings
+        // 3. Separate Findings
+        const allFindings = data.findings || [];
+        const detFindings = allFindings.filter(f => f.source_type === 'system' || f.source_type === 'structured_data');
+        const semanticFindings = allFindings.filter(f => f.source_type !== 'system' && f.source_type !== 'structured_data');
+
+        // Counters
+        let supported = 0, contradicted = 0, unknown = 0;
+        allFindings.forEach(f => {
+            if (f.status === 'SUPPORTED') supported++;
+            else if (f.status === 'CONTRADICTED') contradicted++;
+            else if (f.status === 'UNKNOWN') unknown++;
+        });
+        document.getElementById('count-supported').textContent = supported;
+        document.getElementById('count-contradicted').textContent = contradicted;
+        document.getElementById('count-unknown').textContent = unknown;
+
+        // 4. Render Deterministic Checks
+        const detList = document.getElementById('deterministic-list');
+        detList.innerHTML = '';
+        detFindings.forEach(f => {
+            const div = document.createElement('div');
+            div.className = `det-item ${f.status}`;
+            
+            let icon = '✓';
+            if (f.status === 'CONTRADICTED') icon = '✗';
+            else if (f.status === 'UNKNOWN') icon = '⚠';
+
+            div.innerHTML = `
+                <div class="det-icon">${icon}</div>
+                <div class="det-content">
+                    <div class="det-title">${f.finding}</div>
+                    <div class="det-value">${f.evidence}</div>
+                    <div class="det-status-text">${f.status.replace('_', ' ')}</div>
+                </div>
+            `;
+            detList.appendChild(div);
+        });
+
+        // 6. Render Semantic Findings
         const findingsList = document.getElementById('findings-list');
         findingsList.innerHTML = '';
-        if (data.findings && data.findings.length > 0) {
-            data.findings.forEach(f => {
+        
+        if (semanticFindings.length > 0) {
+            semanticFindings.forEach(f => {
                 const div = document.createElement('div');
-                div.className = `finding-item ${f.status}`;
+                div.className = `finding-card ${f.status}`;
+                
+                let icon = '✓';
+                if (f.status === 'CONTRADICTED') icon = '⚠';
+                else if (f.status === 'UNKNOWN') icon = '?';
+
+                let policyHtml = '';
+                if (f.policy_clause) {
+                    policyHtml = `
+                        <div class="policy-reference">
+                            <div class="meta-label">POLICY REFERENCE</div>
+                            <div class="meta-value">${f.policy_clause}</div>
+                        </div>
+                    `;
+                }
+
                 div.innerHTML = `
-                    <div class="finding-header">
-                        <span class="finding-status ${f.status}">${f.status}</span>
+                    <div class="finding-card-header">
+                        <div class="status-badge ${f.status}">
+                            <span>${icon}</span>
+                            <span>${f.status}</span>
+                        </div>
+                        <div class="source-badge">${f.source_type}</div>
                     </div>
-                    <div class="finding-content">${f.finding}</div>
-                    <div class="finding-meta">
-                        <p><strong>Source:</strong> ${f.source_type} (${f.source_id}) - <em>${f.source_location}</em></p>
-                        <p><strong>Evidence:</strong> "${f.evidence}"</p>
-                        ${f.policy_clause ? `<p><strong>Clause:</strong> ${f.policy_clause}</p>` : ''}
+                    <div class="finding-card-body">
+                        <div class="finding-text">${f.finding}</div>
+                        
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">SOURCE LOCATION</span>
+                                <span class="meta-value">${f.source_id} • ${f.source_location}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">EVIDENCE SNIPPET</span>
+                                <span class="meta-value quote">"${f.evidence}"</span>
+                            </div>
+                        </div>
+                        
+                        ${policyHtml}
                     </div>
                 `;
                 findingsList.appendChild(div);
             });
         } else {
-            findingsList.innerHTML = '<p style="color: #94a3b8">No specific findings extracted.</p>';
+            findingsList.innerHTML = '<div style="color: var(--text-muted); font-style: italic; padding: 1rem;">No semantic findings extracted for this claim.</div>';
         }
     }
 });

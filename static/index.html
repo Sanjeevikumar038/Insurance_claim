@@ -3,64 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PS02 Insurance Claims Review Assistant</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>CLAIMWISE | Insurance Claims Evidence Review</title>
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
-        <header>
-            <h1>Insurance Claims Evidence Review Assistant</h1>
-            <p>Automated analysis and deterministic checking for motor insurance claims.</p>
+        <!-- TOP NAVIGATION -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <div class="nav-brand">
+                    <strong>CLAIMWISE</strong> Evidence Review
+                </div>
+            </div>
+            <div class="nav-right">
+                <span class="nav-label">AI + Deterministic Review</span>
+                <span class="nav-status"><span class="status-dot"></span> System Ready</span>
+            </div>
+        </nav>
+
+        <!-- MAIN HEADER -->
+        <header class="main-header">
+            <h1>INSURANCE CLAIM<br>EVIDENCE REVIEW</h1>
+            <p class="header-subtitle">Evidence-grounded review of motor insurance claims against policy coverage, exclusions and required documentation.</p>
+            <div class="header-badges">
+                <span class="capability-badge">Evidence Grounded</span>
+                <span class="capability-badge">Policy Aware</span>
+                <span class="capability-badge">Deterministic Decisioning</span>
+            </div>
         </header>
 
         <main>
-            <section class="claim-selector-section">
-                <label for="claim-select">Select a Claim to Review:</label>
-                <select id="claim-select">
-                    <option value="" disabled selected>Loading claims...</option>
-                </select>
-                <button id="btn-review" disabled>Run Review</button>
+            <!-- CLAIM SELECTION AREA -->
+            <section class="workspace-section">
+                <div class="workspace-header">
+                    <h2>CLAIM WORKSPACE</h2>
+                    <p>Select a claim to inspect evidence and policy compliance.</p>
+                </div>
+                
+                <div class="workspace-controls">
+                    <div class="selector-wrapper">
+                        <select id="claim-select">
+                            <option value="" disabled selected>Loading claims...</option>
+                        </select>
+                    </div>
+                    <button id="btn-review" class="btn-primary" disabled>
+                        <span class="btn-icon">▶</span> Run Evidence Review
+                    </button>
+                </div>
+
+                <!-- DYNAMIC CLAIM SUMMARY (Hidden initially) -->
+                <div id="claim-summary" class="claim-summary hidden">
+                    <div class="metric-card">
+                        <span class="metric-label">CLAIM ID</span>
+                        <strong id="summary-id" class="metric-value">-</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">TYPE</span>
+                        <strong id="summary-type" class="metric-value">-</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">AMOUNT</span>
+                        <strong id="summary-amount" class="metric-value">-</strong>
+                    </div>
+                    <div class="metric-card" id="summary-docs-card">
+                        <span class="metric-label">DOCUMENT STATUS</span>
+                        <strong id="summary-docs" class="metric-value doc-status">-</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">POLICY</span>
+                        <strong id="summary-policy" class="metric-value">-</strong>
+                    </div>
+                </div>
             </section>
 
-            <section class="results-section hidden" id="results-container">
-                <div class="result-header">
-                    <h2>Review Results</h2>
-                    <span id="recommendation-badge" class="badge"></span>
-                </div>
+            <!-- RESULTS AREA -->
+            <section id="results-container" class="results-section hidden">
                 
-                <div class="justification-card">
-                    <h3>Justification</h3>
-                    <p id="justification-text"></p>
-                </div>
-                
-                <div class="issues-container">
-                    <div class="card flags-card hidden" id="flags-card">
-                        <h3>Deterministic Flags</h3>
-                        <ul id="flags-list"></ul>
+                <!-- REVIEW OUTCOME -->
+                <div class="outcome-card" id="outcome-card">
+                    <div class="outcome-header">
+                        <h2>REVIEW OUTCOME</h2>
+                        <div id="recommendation-badge" class="outcome-badge"></div>
                     </div>
-                    
-                    <div class="card missing-docs-card hidden" id="missing-docs-card">
-                        <h3>Missing Documents</h3>
+                    <p id="justification-text" class="outcome-justification"></p>
+                </div>
+
+                <!-- DECISION PIPELINE -->
+                <div class="pipeline-card">
+                    <div class="pipeline-container">
+                        <div class="pipeline-step">
+                            <div class="step-number">01</div>
+                            <div class="step-info">
+                                <strong>CLAIM EVIDENCE</strong>
+                                <span>Documents analyzed</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow">↓</div>
+                        <div class="pipeline-step">
+                            <div class="step-number">02</div>
+                            <div class="step-info">
+                                <strong>SEMANTIC ANALYSIS</strong>
+                                <span>Evidence extraction</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow">↓</div>
+                        <div class="pipeline-step">
+                            <div class="step-number">03</div>
+                            <div class="step-info">
+                                <strong>POLICY RETRIEVAL</strong>
+                                <span>Applicable clauses</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow">↓</div>
+                        <div class="pipeline-step">
+                            <div class="step-number">04</div>
+                            <div class="step-info">
+                                <strong>DETERMINISTIC CHECKS</strong>
+                                <span>Rules validated</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-arrow">↓</div>
+                        <div class="pipeline-step">
+                            <div class="step-number">05</div>
+                            <div class="step-info">
+                                <strong>FINAL DECISION</strong>
+                                <span>Recommendation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MISSING DOCUMENTS WARNING -->
+                <div id="missing-docs-section" class="missing-docs-section hidden">
+                    <div class="warning-banner">
+                        <div class="warning-icon">⚠</div>
+                        <div class="warning-content">
+                            <h3>INFORMATION REQUIRED</h3>
+                            <p>Missing documents block further progression.</p>
+                        </div>
+                    </div>
+                    <div class="missing-docs-list-wrapper">
                         <ul id="missing-docs-list"></ul>
                     </div>
                 </div>
 
-                <div class="findings-section" id="findings-section">
-                    <h3>Evidence Findings & Citations</h3>
-                    <div id="findings-list" class="findings-list">
-                        <!-- Finding items injected here -->
+                <!-- EVIDENCE OVERVIEW COUNTERS -->
+                <div class="evidence-overview">
+                    <h3>EVIDENCE OVERVIEW</h3>
+                    <div class="overview-counters">
+                        <div class="counter-card supported">
+                            <strong id="count-supported">0</strong>
+                            <span>SUPPORTED</span>
+                        </div>
+                        <div class="counter-card contradicted">
+                            <strong id="count-contradicted">0</strong>
+                            <span>CONTRADICTED</span>
+                        </div>
+                        <div class="counter-card unknown">
+                            <strong id="count-unknown">0</strong>
+                            <span>UNKNOWN</span>
+                        </div>
                     </div>
                 </div>
+
+                <div class="findings-layout">
+                    <!-- LEFT COLUMN: DETERMINISTIC CHECKS -->
+                    <div class="deterministic-section">
+                        <h3>DETERMINISTIC POLICY CHECKS</h3>
+                        <p class="section-desc">Python-generated structured checks.</p>
+                        <div id="deterministic-list" class="deterministic-list">
+                            <!-- Deterministic findings injected here -->
+                        </div>
+                        <!-- FLAGS -->
+                        <div id="flags-card" class="flags-card hidden">
+                            <h4>Material Contradictions Flags</h4>
+                            <ul id="flags-list"></ul>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN: SEMANTIC FINDINGS -->
+                    <div class="semantic-section">
+                        <div class="section-header-row">
+                            <div class="header-titles">
+                                <h3>EVIDENCE FINDINGS</h3>
+                                <p class="section-desc">AI extracted findings mapped to evidence and policy.</p>
+                            </div>
+                            <div class="ai-indicators">
+                                <div class="ai-badge">
+                                    <div class="ai-title">SEMANTIC EVIDENCE ANALYSIS</div>
+                                    <div class="ai-tech">Powered by: Gemini 3.5 Flash-Lite</div>
+                                </div>
+                                <div class="ai-badge">
+                                    <div class="ai-title">LOCAL POLICY RETRIEVAL</div>
+                                    <div class="ai-tech">Powered by: FAISS</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="findings-list" class="findings-list">
+                            <!-- Semantic findings injected here -->
+                        </div>
+                    </div>
+                </div>
+
             </section>
             
-            <div id="loading-overlay" class="hidden">
-                <div class="spinner"></div>
-                <p>Analyzing claim evidence against policy...</p>
+            <!-- LOADING OVERLAY -->
+            <div id="loading-overlay" class="loading-overlay hidden">
+                <div class="loader-content">
+                    <div class="spinner"></div>
+                    <h3 id="loading-text">Analyzing claim evidence...</h3>
+                </div>
             </div>
         </main>
     </div>
     
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2"></script>
 </body>
 </html>
