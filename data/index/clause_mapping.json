@@ -1,0 +1,38 @@
+[
+  {
+    "type": "clause",
+    "id": "C1",
+    "title": "Accidental Damage",
+    "text": "The Company will indemnify the insured against loss or damage to the vehicle by accidental external means."
+  },
+  {
+    "type": "clause",
+    "id": "C2",
+    "title": "Theft",
+    "text": "The Company will indemnify the insured against loss of the vehicle due to burglary, housebreaking, or theft."
+  },
+  {
+    "type": "clause",
+    "id": "C3",
+    "title": "Claim Window",
+    "text": "All claims must be reported within 30 days of the incident date."
+  },
+  {
+    "type": "exclusion",
+    "id": "E1",
+    "title": "Drunk Driving",
+    "text": "The Company shall not be liable for any accidental loss or damage suffered whilst the insured or any person driving with the knowledge and consent of the insured is under the influence of intoxicating liquor or drugs."
+  },
+  {
+    "type": "exclusion",
+    "id": "E2",
+    "title": "Keys Left in Vehicle",
+    "text": "The Company shall not be liable for theft of the vehicle if the keys were left in or on the unattended vehicle."
+  },
+  {
+    "type": "exclusion",
+    "id": "E3",
+    "title": "Unlicensed Driver",
+    "text": "The Company shall not be liable if the vehicle is being driven by a person who does not hold a valid driving license."
+  }
+]

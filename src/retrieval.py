@@ -1,3 +1,5 @@
+import os
+import json
 import faiss
 import numpy as np
 from typing import List, Dict
@@ -7,37 +9,23 @@ from src.gemini import generate_embeddings
 class PolicyRetriever:
     def __init__(self, policy: Policy):
         self.policy = policy
+        self.index_path = "data/index/policy.index"
+        self.mapping_path = "data/index/clause_mapping.json"
         self.index = None
-        self.clause_mapping = []  # Maps index back to clause
-        self._build_index()
+        self.clause_mapping = []
+        self._load_index()
         
-    def _build_index(self):
-        # We only embed clauses and exclusions since the rest is handled by deterministic rules
-        texts_to_embed = []
-        
-        for clause in self.policy.clauses:
-            text = f"CLAUSE: {clause.title}\n{clause.text}"
-            texts_to_embed.append(text)
-            self.clause_mapping.append({"type": "clause", "id": clause.id, "title": clause.title, "text": clause.text})
+    def _load_index(self):
+        if not os.path.exists(self.index_path) or not os.path.exists(self.mapping_path):
+            raise RuntimeError(
+                f"Missing precomputed FAISS index or metadata. "
+                f"Expected {self.index_path} and {self.mapping_path}. "
+                f"Please run build_index.py to generate them."
+            )
             
-        for exclusion in self.policy.exclusions:
-            text = f"EXCLUSION: {exclusion.title}\n{exclusion.text}"
-            texts_to_embed.append(text)
-            self.clause_mapping.append({"type": "exclusion", "id": exclusion.id, "title": exclusion.title, "text": exclusion.text})
-            
-        if not texts_to_embed:
-            return
-            
-        # Get embeddings from Gemini
-        embeddings = generate_embeddings(texts_to_embed)
-        
-        # Build FAISS index
-        embed_dim = len(embeddings[0])
-        self.index = faiss.IndexFlatL2(embed_dim)
-        
-        # Convert to float32 numpy array for FAISS
-        embeddings_np = np.array(embeddings).astype("float32")
-        self.index.add(embeddings_np)
+        self.index = faiss.read_index(self.index_path)
+        with open(self.mapping_path, "r") as f:
+            self.clause_mapping = json.load(f)
         
     def retrieve(self, query: str, top_k: int = 3) -> str:
         """
