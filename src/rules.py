@@ -5,16 +5,25 @@ from src.models import Policy, Claim, Document, FindingMetadata
 def parse_date(date_str: str) -> datetime:
     return datetime.strptime(date_str, "%Y-%m-%d")
 
-def check_missing_documents(policy: Policy, claim: Claim, provided_docs: List[Document]) -> List[str]:
+def check_missing_documents(policy: Policy, claim: Claim, provided_docs: List[Document]) -> Tuple[List[str], List[FindingMetadata]]:
     required = policy.requirements.get(claim.incident_type, [])
     provided_types = [doc.doc_type for doc in provided_docs]
     
     missing = []
+    findings = []
     for req in required:
         if req not in provided_types:
             missing.append(req)
+            findings.append(FindingMetadata(
+                finding=f"Required document '{req}' is missing.",
+                source_type="system",
+                source_id="requirements",
+                source_location="N/A",
+                evidence=f"Missing: {req}",
+                status="UNKNOWN"
+            ))
             
-    return missing
+    return missing, findings
 
 def run_deterministic_checks(policy: Policy, claim: Claim) -> Tuple[List[FindingMetadata], List[str]]:
     findings = []

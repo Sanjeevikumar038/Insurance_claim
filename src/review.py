@@ -84,8 +84,9 @@ def review_claim(claim_id: str) -> ReviewResult:
         documents = load_documents(claim_id)
         
         # 1. Deterministic Checks
-        missing_docs = check_missing_documents(policy, claim, documents)
+        missing_docs, missing_docs_findings = check_missing_documents(policy, claim, documents)
         det_findings, det_flags = run_deterministic_checks(policy, claim)
+        det_findings.extend(missing_docs_findings)
         
         # If there are already missing docs or flags, we should still run Gemini to get the full picture,
         # but the decision will be handled by the hierarchy.
